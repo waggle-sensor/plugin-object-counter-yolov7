@@ -98,12 +98,15 @@ class YOLOv7_Main():
             pred = self.model(image)[0]
             pred = non_max_suppression(pred, args.conf_thres, args.iou_thres, classes=args.classes, agnostic=True)
 
-        return pred
+        return pred, self.class_names
 
 def detect(yolov7_main, sample, do_sampling, plugin, args):
     frame = sample.data
     timestamp = sample.timestamp
-    result = yolov7_main.run(frame, args)
+    results, outclass = yolov7_main.run(frame, args)
+    print('detection done')
+    results = results[0]
+    print(results)
 
     if do_sampling:
         found = {}
@@ -143,14 +146,15 @@ def detect(yolov7_main, sample, do_sampling, plugin, args):
 
         detection_stats = 'found objects: '
         for name, count in found.items():
-            detection_stats += f'{name}[{cound}] '
+            detection_stats += f'{name}[{count}] '
             plugin.publish(f'{TOPIC_TEMPLATE}.{name}', count, timestamp=timestamp)
         print(detection_stats)
 
 if __name__ == "__main__":
+    print('loading args')
     args = get_arguments()
+    print('loading model')
     yolov7_main = YOLOv7_Main(args, args.weight)
-
 
     sampling_countdown = -1
     if args.sampling_interval >= 0:
