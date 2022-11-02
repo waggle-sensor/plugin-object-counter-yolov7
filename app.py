@@ -1,21 +1,21 @@
 from pathlib import Path
 import argparse
-#import json
-#import os
-#import sys
 import time
-#import random
-#import urllib
 import numpy as np
 import cv2
 
 import torch
 import torch.nn as nn
-#from torchvision import transforms
 
 from models.experimental import Ensemble
 from models.common import Conv, DWConv
 from utils.general import non_max_suppression, apply_classifier
+
+import logging
+from waggle.plugin import Plugin
+from waggle.data.vision import Camera
+
+TOPIC_TEMPLATE = "env.yolov7"
 
 def get_arguments():
     parser = argparse.ArgumentParser(
@@ -32,6 +32,21 @@ def get_arguments():
     parser.add_argument('--classes', nargs='+', type=int, help='filter by class: --class 0, or --class 0 2 3')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.45, help='IOU threshold for NMS')
+
+
+    parser.add_argument(
+        '-stream', dest='stream',
+        action='store', default="bottom",
+        help='ID or name of a stream, e.g. sample')
+    parser.add_argument(
+        '-continuous', dest='continuous',
+        action='store_true', default=False,
+        help='Continuous run flag')
+    parser.add_argument(
+        '-sampling-interval', dest='sampling_interval',
+        action='store', default=-1, type=int,
+        help='Sampling interval between inferencing')
+
 
     return parser.parse_args()
 
@@ -74,7 +89,6 @@ class YOLOv7_Main():
 
     def run(self, frame, args):
         sized = cv2.resize(frame, (640, 640))
-        sized = cv2.cvtColor(sized, cv2.COLOR_BGR2RGB)
 
         image = sized / 255.0
         image = image.transpose((2, 0, 1))
@@ -87,25 +101,77 @@ class YOLOv7_Main():
 
         return pred
 
+def detect(yolov7_main, sample, do_sampling, plugin, args):
+    frame = sample.data
+    timestamp = sample.timestamp
+    result = yolov7_main.run(frame, args)
+
+    if do_sampling:
+        found = {}
+        for result in results:
+            l = result[0] * w/640  ## x1
+            t = result[1] * h/640  ## y1
+            r = result[2] * w/640  ## x2
+            b = result[3] * h/640  ## y2
+            conf = round(result[4], 2)
+            name = outclass[int(result[5])]
+            frame = cv2.rectangle(frame, (int(l), int(t)), (int(r), int(b)), (255,0,0), 2)
+            frame = cv2.putText(frame, f'{name}:{conf}', (int(l), int(t)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,255,0), 2)
+
+            if not name in found:
+                found[name] = 1
+            else:
+                found[name] += 1
+
+        sample.data = frame
+        sample.save('yolov7.jpg')
+        plugin.upload_file('yolov7.jpg')
+        print('saved')
+
+        detection_stats = 'found objects: '
+        for name, count in found.items():
+            detection_stats += f'{name}[{cound}] '
+            plugin.publish(f'{TOPIC_TEMPLATE}.{name}', count, timestamp=timestamp)
+        print(detection_stats)
+    else:
+        found = {}
+        for result in results:
+            name = outclass[int(result[5])]
+            if not name in found:
+                found[name] = 1
+            else:
+                found[name] += 1
+
+        detection_stats = 'found objects: '
+        for name, count in found.items():
+            detection_stats += f'{name}[{cound}] '
+            plugin.publish(f'{TOPIC_TEMPLATE}.{name}', count, timestamp=timestamp)
+        print(detection_stats)
 
 if __name__ == "__main__":
     args = get_arguments()
-    print('got args')
     cap = cv2.VideoCapture(args.input_video)
-    print('video capture opened')
     yolov7_main = YOLOv7_Main(args, args.weight)
-    print('model loaded')
 
-    c = 0
+
+    sampling_countdown = -1
+    if args.sampling_interval >= 0:
+        sampling_countdown = args.sampling_interval
+
     while True:
-        c += 1
-        #print(c)
-        ret, frame = cap.read()
-        if ret == False:
-            print('no video frame')
-            break
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        with Plugin() as plugin:
+            with Camera(args.stream) as camera:
+                sample = camera.snapshot()
 
-        print('s', time.time())
-        result = yolov7_main.run(frame, args)
-        print(time.time())
+
+            do_sampling = False
+            if sampling_countdown > 0:
+                sampling_countdown -= 1
+            elif sampling_countdown == 0:
+                do_sampling = True
+                sampling_countdown = args.sampling_interval
+
+
+            detect(yolov7_main, sample, do_sampling, plugin, args)
+            if not args.continuous:
+                exit(0)
