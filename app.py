@@ -149,7 +149,6 @@ def detect(yolov7_main, sample, do_sampling, plugin, args):
 
 if __name__ == "__main__":
     args = get_arguments()
-    cap = cv2.VideoCapture(args.input_video)
     yolov7_main = YOLOv7_Main(args, args.weight)
 
 
