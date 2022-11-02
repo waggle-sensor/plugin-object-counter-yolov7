@@ -22,8 +22,7 @@ def get_arguments():
         description="Evaluate a pretrained model on ImageNet"
     )
 
-    parser.add_argument('--weight', type=str, required=True, help='model name')
-    parser.add_argument("--input-video", type=str, required=True, help="path to dataset")
+    parser.add_argument('--weight', type=str, default='yolov7.pt', help='model name')
     parser.add_argument('--labels', dest='labels',
                         action='store', default='coco.names', type=str,
                         help='Labels for detection')

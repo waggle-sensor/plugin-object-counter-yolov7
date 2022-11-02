@@ -1,0 +1,35 @@
+name: "object_counter_yolov7"
+namespace: "waggle"
+version: "0.0.1"
+description: "Object Counter YOLOv7"
+authors: "Seongha Park <seongha.park@anl.gov>"
+collaborators: "Waggle Team <https://wa8.gl>"
+funding:
+license: "The license agreed by Argonne National Laboratory"
+keywords: "object counter, machine learning"
+homepage: "https://github.com/waggle-sensor/plugin-object-counter-yolov7/blob/main/ecr-meta/ecr-science-description.md"
+source:
+    architectures:
+        - "linux/arm64"
+        - "linux/amd64"
+    url: "https://github.com/waggle-sensor/plugin-object-counter-yolov7"
+    branch: "main"
+inputs:
+    - id: "stream"
+      type: "string"
+    - id: "continuous"
+      type: "boolean"
+    - id: "sampling-interval"
+      type: "int"
+    - id: "weight"
+      type: "str"
+    - id: "labels"
+      type: "str"
+    - id: "classes"
+      type: "int"
+    - id: "conf-thres"
+      type: "float"
+    - id: "iou-thres"
+      type: "float"
+metadata:
+  ontology: env.yolov7.*
