@@ -1,4 +1,4 @@
-name: "object_counter_yolov7"
+name: "object_counter"
 namespace: "waggle"
 version: "0.0.2"
 description: "Object Counter YOLOv7"
@@ -32,4 +32,4 @@ inputs:
     - id: "iou-thres"
       type: "float"
 metadata:
-  ontology: env.yolov7.*
+  ontology: env.counter.*
