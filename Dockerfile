@@ -4,6 +4,7 @@ COPY requirements.txt /app/
 RUN pip3 install --no-cache-dir -r /app/requirements.txt
 
 COPY app.py /app/
+COPY coco.names /app/
 COPY models/ /app/models
 COPY utils/ /app/utils
 
