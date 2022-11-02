@@ -15,7 +15,7 @@ import logging
 from waggle.plugin import Plugin
 from waggle.data.vision import Camera
 
-TOPIC_TEMPLATE = "env.counter"
+TOPIC_TEMPLATE = "env.count"
 
 def get_arguments():
     parser = argparse.ArgumentParser(
