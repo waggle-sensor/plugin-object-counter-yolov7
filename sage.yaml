@@ -1,6 +1,6 @@
 name: "object_counter"
 namespace: "waggle"
-version: "0.0.2"
+version: "0.1.1"
 description: "Object Counter YOLOv7"
 authors: "Seongha Park <seongha.park@anl.gov>"
 collaborators: "Waggle Team <https://wa8.gl>"
