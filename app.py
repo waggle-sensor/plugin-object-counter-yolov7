@@ -106,7 +106,6 @@ def detect(yolov7_main, sample, do_sampling, plugin, args):
     results, outclass = yolov7_main.run(frame, args)
     print('detection done')
     results = results[0]
-    print(results)
 
     if do_sampling:
         found = {}
