@@ -8,7 +8,7 @@ The code runs a YOLOv7 model which is trained with COCO dataset with a given tim
 
 # Ontology
 
-The code publishes measurement with topic `env.yolov7.OBJECT`, where `OBJECT` is the object recognized. Value for a topic indicates the count of the object.
+The code publishes measurement with topic `env.count.OBJECT`, where `OBJECT` is the object recognized. Value for a topic indicates the count of the object.
 
 # Inference from Sage codes
 To query the output from the plugin, you can do with python library 'sage_data_client':
@@ -19,7 +19,7 @@ import sage_data_client
 df = sage_data_client.query(
     start="-1h",
     filter={
-        "name": "env.yolov7.*",
+        "name": "env.count.*",
     }
 )
 
